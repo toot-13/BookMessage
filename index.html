@@ -18,18 +18,18 @@
         <div class="panel-body form-inline">
             <div class="input-group">
                 <div class="input-group-addon">书名</div>
-                <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                <input type="text" class="form-control" id="inpBookname" placeholder="Amount">
             </div>
             <div class="input-group">
                 <div class="input-group-addon">作者</div>
-                <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                <input type="text" class="form-control" id="inpAuthor" placeholder="Amount">
             </div>
             <div class="input-group">
                 <div class="input-group-addon">出版社</div>
-                <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                <input type="text" class="form-control" id="inpPublisher" placeholder="Amount">
             </div>
 
-            <button type="button" class="btn btn-primary">添加</button>
+            <button type="button" class="btn btn-primary" id="addBook">添加</button>
         </div>
     </div>
 
@@ -50,16 +50,49 @@
         $(function() {
             function getBookList() {
                 $.get('http://www.liulongbin.top:3006/api/getbooks', function(res) {
-                    if (res.status != 200) return alert("获取图书列表失败")
+                    if (res.status !== 200) return alert("获取图书列表失败")
 
                     var rows = []
                     $.each(res.data, function(i, item) {
-                        rows.push(`<tr><td>${item.id}</td><td>${item.bookname}</td><td>${item.author}</td><td>${item.publisher}</td><td><a href="javascript:;">删除</a></td></tr>`)
+                        rows.push(`<tr><td>${item.id}</td><td>${item.bookname}</td><td>${item.author}</td><td>${item.publisher}</td><td><a href="javascript:;" class="del" data-id="${item.id}">删除</a></td></tr>`)
                     })
+
                     $('#tb').empty().append(rows.join(''))
                 })
             }
             getBookList()
+                //动态添加的元素必须通过代理的方式进行添加
+                // $('.del').on('click', function() {
+                //     alert(11)
+                // })
+                //通过代理的方式动态给元素添加事件
+            $('table').on('click', '.del', function() {
+                var id = $(this).attr('data-id')
+                $.get('http://www.liulongbin.top:3006/api/delbook/', {
+                    id: id
+                }, function(res) {
+                    if (res.status !== 200) return alert('删除失败！')
+                    getBookList()
+                })
+            })
+            $('#addBook').on('click', function() {
+                var bookname = $('#inpBookname').val().trim()
+                var author = $('#inpAuthor').val().trim()
+                var publisher = $('#inpPublisher').val().trim()
+                if (bookname.length <= 0 || author.length <= 0 || publisher.length <= 0) {
+                    alert("请将信息填写完整")
+                }
+                $.post('http://www.liulongbin.top:3006/api/addbook', {
+                    bookname,
+                    author,
+                    publisher
+                }, function(res) {
+                    if (res.status !== 201) {
+                        alert("添加失败！")
+                    }
+                    getBookList()
+                })
+            })
         })
     </script>
 
